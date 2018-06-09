@@ -1,0 +1,211 @@
+
+
+
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Cleartrip - Hacker news</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+		<meta name="description" content="Cleartrip- one of the best company to work!">
+        <meta name="author" content="Jackie Vaswani">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+		<script src="bootstrap-3.3.7-dist\js\bootstrap.min.js"></script>
+		<script src="https://use.fontawesome.com/a009c882a7.js"></script>
+		<link rel="stylesheet" href="bootstrap-3.3.7-dist\css\bootstrap.min.css"></link>
+		<script>
+		$(document).ready(function(){
+			$('[data-toggle="tooltip"]').tooltip();   
+		});
+		//AJAX CODE
+		var xmlhttp= new XMLHttpRequest();
+		var out="";
+		function process(pgid) //This function calls only once after the page is loaded
+		{
+			
+			if(xmlhttp.readyState==0 || xmlhttp.readyState==4)
+			{ 
+				xmlhttp.open("GET","http://starlord.hackerearth.com/cleartrip/hackernews",true);
+				//document.getElementById('underinput').innerHTML=(document.getElementById("input").value);
+				xmlhttp.onreadystatechange=function(){
+				 
+					if(xmlhttp.readyState==4 && xmlhttp.status==200){
+					//console.log(xmlhttp.responseText);
+					 out = JSON.parse(xmlhttp.responseText);
+					//var out1 = JSON.parse('{"out":["milk","Cow milk","milk","Cow milk","Goat Milk","Buffalo milk"]}');
+					printData(pgid);
+					}
+				};
+				xmlhttp.send();
+			}
+
+		}
+
+		function printData(pgid)
+		{	isSortedElements=0;
+		console.log("print  data");
+			var outjson="";
+			console.log(out.length);
+			for(var i=pgid;i<pgid+10 && i<out.length;i++)
+			{	
+				outjson+=("<br/><a href=\""+out[i].url+"\" class=\"news-element\" style=\"text-decoration:none;\"><div id=\"news-content\" style=\"border:1px solid #ddd; border-left:3.5px solid orange; padding:3px; padding-left:15px; \"><h4>"+i+".  "+out[i].title+"</h4><h6 style=\"color:gray;\">"+out[i].num_points+" points by "+ out[i].author+" | "+out[i].num_comments+" comments</h6></div>	</a>");
+			}
+			
+			document.getElementById("content").innerHTML=outjson;
+			fillPaginationContent(out.length,0);
+		}
+		
+		function fillPaginationContent(length, isSorted)
+		{
+			var n=Math.ceil(length/10);
+			var pcontent="<ul class=\"pagination\">";
+			for(var i=1;i<=n;i++)
+			{ if(isSorted==0)
+			 pcontent+="<li><a onclick=\"printData("+((i-1)*10+1)+")\">"+i+"</a></li>";
+			 else
+			  pcontent+="<li><a onclick=\"printSortedData("+((i-1)*10+1)+")\">"+i+"</a></li>";
+			}
+			pcontent+="</ul>";
+			document.getElementById("pagination-content").innerHTML=pcontent;
+		}	
+		var items;
+		var isSortedElements;
+		function printSortedData(pgid)
+		{
+			var outjson="";
+			isSortedElements=1;
+			console.log("print sorted data");
+			console.log(isSortedElements);
+			for(var i=pgid;i<pgid+10 && i<items.length;i++)
+			{	
+				outjson+=("<br/><a href=\""+items[i-1].url+"\" class=\"news-element\" style=\"text-decoration:none;\"><div id=\"news-content\" style=\"border:1px solid #ddd; border-left:3.5px solid orange; padding:3px; padding-left:15px; \"><h4>"+i+".  "+items[i-1].title+"</h4><h6 style=\"color:gray;\">"+items[i-1].num_points+" points by "+ items[i-1].author+" | "+items[i-1].num_comments+" comments</h6></div>	</a>");
+			}
+			
+			document.getElementById("content").innerHTML=outjson;
+			fillPaginationContent(items.length,1);
+		}
+		function sortItem(pgid)
+		{		
+				items=out.slice();
+				if(items[0].api_rate_limit==50000)
+				delete items[0];
+				console.log("sorted element");
+				items.sort(function(a, b) {
+				var nameA = a.title.toUpperCase(); 
+				var nameB = b.title.toUpperCase(); 
+					if (nameA < nameB) {
+					return -1;
+				  }
+				  if (nameA > nameB) {
+					return 1;
+				  }
+
+				  // names must be equal
+				  return 0;
+				});
+			 printSortedData(pgid);
+			
+		
+		}
+		function clickHandler(pgid)
+		{
+			if(isSortedElements==1)
+				{
+				printData(pgid);
+				document.getElementById('filter').style.color="black";
+				}
+			else
+				{
+					if(items)
+					{
+					 printSortedData(pgid);
+					}
+					else
+					{
+					sortItem(pgid);
+					}
+					document.getElementById('filter').style.color="#2980b9";
+				}
+		}
+		function searchArticle()
+		{
+			document.getElementById("pagination-content").innerHTML="";
+			var outjson="";
+			console.log("search");
+			var count=0;
+			for(var i=1;i<out.length;i++)
+			{	
+				var a=new RegExp( document.getElementById('search').value.toLowerCase() );
+				if(a.test(out[i].title.toLowerCase()))
+				{ outjson+=("<br/><a href=\""+out[i].url+"\" class=\"news-element\" style=\"text-decoration:none;\"><div id=\"news-content\" style=\"border:1px solid #ddd; border-left:3.5px solid orange; padding:3px; padding-left:15px; \"><h4>"+i+".  "+out[i].title+"</h4><h6 style=\"color:gray;\">"+out[i].num_points+" points by "+ out[i].author+" | "+out[i].num_comments+" comments</h6></div>	</a>");
+				count++;
+				}
+			}
+			//console.log("search called"+count);
+			document.getElementById("content").innerHTML=outjson;
+			document.getElementById("searchresult").innerHTML=count+" results found!!";
+			if(count==0){
+			document.getElementById("content").innerHTML="<h4>No results!</h4>";
+			document.getElementById("searchresult").innerHTML="";
+			}
+			if(document.getElementById('search').value=="")
+				{	if(isSortedElements==1)
+					{
+					printSortedData(1);
+					document.getElementById("searchresult").innerHTML="";
+					}
+					else{
+					printData(1);
+					document.getElementById("searchresult").innerHTML="";
+					}
+				}
+		}
+		</script>
+		<style>
+		#filter{color:black;}
+		</style>
+	</head>
+	<body style="margin:0;" onload="process(1)">
+	<div class="container-fluid" style="background-color:#f1f1f1; border-bottom:1px solid #ddd; padding-left:30px; padding-top:2%; margin:0;">
+	<h1 style="color:#2980b9; margin-bottom:0;">Hacker News</h1>
+	<h3 style="margin-top:0;">Best Hacker News Articles</h3>
+	</div>
+	
+	<div class="container" style="padding:20px;">
+  <div class="row" >
+		  <div class="col-md-10 col-xs-10">
+		  <form>
+		  <div class="input-group">
+			<input type="text" class="form-control" id="search" onkeyup="searchArticle()" placeholder="Search article by name">
+			<div class="input-group-btn">
+			  <button class="btn btn-default" type="submit">
+				<i class="glyphicon glyphicon-search"></i>
+			  </button>
+			  </div> 
+		   </div>
+		   </form>
+		 </div> 
+		 <div class="col-md-2 col-xs-2" style="text-align:center;">
+		 <a onclick="clickHandler(1)" style="font-size:200%; color:black;" id="filter" data-toggle="tooltip" title="Sort by name" data-placement="bottom">
+				  <span class="glyphicon glyphicon-filter"></span>
+		  </a>
+		 </div>
+ 
+  </div>
+  <br/>
+  <div id="searchresult" style="text-align:right;"></div>
+  <br/>
+	  <div id="content">
+	  </div>
+	 <div id="pagination-content" style="width:100%;text-align:center; padding-left:0;padding-right:0; margin-left:0;margin-right:0">
+	 </div>
+ </div>
+ 
+ 
+ 
+ 
+
+	
+	</body>
+</html>
